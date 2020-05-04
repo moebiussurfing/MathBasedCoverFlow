@@ -144,11 +144,19 @@ void ofApp::draw(){
 
         ofSetColor(colors[i]);
 
+
+        if (_to_x == i)
+        {
+            ofPushMatrix();
+            float dur = 25 * 20.f;
+            ofRotateYDeg(((ofGetFrameNum() % (int)dur)/dur) * 360.0f);
+        }
+
         if (i%2==0)
         {
 
 //            ofDrawCircle(-0.5, -0.5, .5f);
-            
+
             ofFill();
             ofDrawBox(.5);
             ofSetColor(255);
@@ -167,7 +175,10 @@ void ofApp::draw(){
             ofDrawCone(.25, .5);
         }
 
-
+        if (_to_x == i)
+        {
+            ofPopMatrix();
+        }
 
 		ofPopMatrix();
 	}
