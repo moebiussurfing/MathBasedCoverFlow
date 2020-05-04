@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "ofMain.h"
 #include "ofxImGui.h"
@@ -25,7 +25,7 @@ public:
 	void gotMessage(ofMessage msg);
 		
 	ofEasyCam _camera;
-	ofxImGui _imgui;
+	ofxImGui::Gui _imgui;
 	
 	// coverflow
 	float _edgeSlope = 0.3;
@@ -49,4 +49,6 @@ public:
 	double _v = 0.0;
 	// selection
 	int _to_x = 0;
+
+    vector <ofColor> colors;
 };

@@ -44,3 +44,16 @@ freetype.dll
 glut32.dll
 libeay32.dll
 ssleay32.dll
+bin/MathBasedCoverFlowDebug.app/Contents/Frameworks/libfmodex.dylib
+bin/MathBasedCoverFlowDebug.app/Contents/Info.plist
+bin/MathBasedCoverFlowDebug.app/Contents/MacOS/MathBasedCoverFlowDebug
+bin/MathBasedCoverFlowDebug.app/Contents/PkgInfo
+bin/MathBasedCoverFlowDebug.app/Contents/Resources/icon-debug.icns
+bin/MathBasedCoverFlowDebug.app/Contents/Resources/imgui.ini
+MathBasedCoverFlow.xcodeproj/project.pbxproj
+MathBasedCoverFlow.xcodeproj/xcshareddata/xcschemes/MathBasedCoverFlow Debug.xcscheme
+MathBasedCoverFlow.xcodeproj/xcshareddata/xcschemes/MathBasedCoverFlow Release.xcscheme
+openFrameworks-Info.plist
+Project.xcconfig
+config.make
+Makefile

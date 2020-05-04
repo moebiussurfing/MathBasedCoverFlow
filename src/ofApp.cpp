@@ -1,4 +1,4 @@
-﻿#include "ofApp.h"
+#include "ofApp.h"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -6,7 +6,7 @@
 template <class T>
 void imgui_draw_tree_node(const char *name, bool isOpen, T f) {
 	if (isOpen) {
-		ImGui::SetNextTreeNodeOpen(true, ImGuiSetCond_Once);
+        ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
 	}
 	if (ImGui::TreeNode(name)) {
 		f();
@@ -16,11 +16,20 @@ void imgui_draw_tree_node(const char *name, bool isOpen, T f) {
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    ofSetFrameRate(25);
+
 	_camera.setDistance(20);
 	_camera.setNearClip(0.1);
 	_camera.setFarClip(300.0);
 
 	_imgui.setup();
+
+
+    colors.resize(kSlideN);
+    for (auto &c : colors)
+    {
+        c = ofColor(ofRandom(255), ofRandom(255),ofRandom(255));
+    }
 }
 
 //--------------------------------------------------------------
@@ -81,6 +90,8 @@ void ofApp::draw(){
 	glPushMatrix();
 	ofRotateZ(90);
 	ofDrawGridPlane(1, 10);
+
+
 	ofPopMatrix();
 
 	ofDrawAxis(10);
@@ -129,7 +140,35 @@ void ofApp::draw(){
 		ofRotateY(rot * _rotation);
 
 		// 縦
-		ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
+//        ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
+
+        ofSetColor(colors[i]);
+
+        if (i%2==0)
+        {
+
+//            ofDrawCircle(-0.5, -0.5, .5f);
+            
+            ofFill();
+            ofDrawBox(.5);
+            ofSetColor(255);
+            ofNoFill();
+            ofDrawBox(.5);
+
+        }
+        else
+        {
+//            ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
+
+            ofFill();
+            ofDrawCone(.25, .5);
+            ofSetColor(255);
+            ofNoFill();
+            ofDrawCone(.25, .5);
+        }
+
+
+
 		ofPopMatrix();
 	}
 
@@ -143,8 +182,8 @@ void ofApp::draw(){
 
 	_imgui.begin();
 	ImGui::PushStyleColor(ImGuiCol_WindowBg, ofVec4f(0.0f, 0.2f, 0.2f, 0.8f));
-	ImGui::SetNextWindowPos(ofVec2f(10, 30), ImGuiSetCond_Once);
-	ImGui::SetNextWindowSize(ofVec2f(500, ofGetHeight() * 0.8), ImGuiSetCond_Once);
+    ImGui::SetNextWindowPos(ofVec2f(10, 30), ImGuiCond_Once);
+    ImGui::SetNextWindowSize(ofVec2f(500, ofGetHeight() * 0.8), ImGuiCond_Once);
 
 	ImGui::Begin("Config");
 
