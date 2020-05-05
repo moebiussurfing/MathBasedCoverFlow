@@ -148,6 +148,9 @@ void ofApp::draw(){
         if (_to_x == i)
         {
             ofPushMatrix();
+            float scale = 1.25f;
+            ofScale(scale,scale);
+
             float dur = 25 * 20.f;
             ofRotateYDeg(((ofGetFrameNum() % (int)dur)/dur) * 360.0f);
         }
