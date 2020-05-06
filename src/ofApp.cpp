@@ -3,10 +3,11 @@
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 
+//helper
 template <class T>
 void imgui_draw_tree_node(const char *name, bool isOpen, T f) {
 	if (isOpen) {
-        ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
+		ImGui::SetNextTreeNodeOpen(true, ImGuiCond_Once);
 	}
 	if (ImGui::TreeNode(name)) {
 		f();
@@ -15,8 +16,21 @@ void imgui_draw_tree_node(const char *name, bool isOpen, T f) {
 }
 
 //--------------------------------------------------------------
-void ofApp::setup(){
-    ofSetFrameRate(25);
+void ofApp::exit() {
+	saveGroup(params_Settings, pathSettings);
+	ofxSaveCamera(_camera, "ofEasyCamSettings");
+}
+
+//--------------------------------------------------------------
+void ofApp::setup() {
+	ofSetFrameRate(60);
+
+	//custom objects
+	colors.resize(kSlideN);
+	for (auto &c : colors)
+	{
+		c = ofColor(ofRandom(255), ofRandom(255), ofRandom(255));
+	}
 
 	_camera.setDistance(20);
 	_camera.setNearClip(0.1);
@@ -24,18 +38,51 @@ void ofApp::setup(){
 
 	_imgui.setup();
 
+	_to_x.set("selector", 0, 0, kSlideN - 1);
+	bCamEnable.set("MOUSE CAM", true);
+	bDEBUG.set("DEBUG", true);
+	guiVisible.set("GUI", true);
 
-    colors.resize(kSlideN);
-    for (auto &c : colors)
-    {
-        c = ofColor(ofRandom(255), ofRandom(255),ofRandom(255));
-    }
+	params_Control.setName("Control");
+	params_Control.add(_to_x);
+	params_Control.add(bCamEnable);
+	params_Control.add(bDEBUG);
+	params_Control.add(guiVisible);
+
+	_edgeSlope.set("edgeSlope", 0.3, 0.0f, 1.0f);
+	_positionRoughness.set("positionRoughness", 0.7, 0.0f, 4.0f);
+	_centerArea.set("centerArea", 1.1, 0.0f, 10.0f);
+	_rotationArea.set("rotationArea", 0.7, 0.0f, 4.0f);
+	_rotation.set("rotation", 70.0, 0.0f, 90.0f);
+	_zoomArea.set("zoomArea", 0.7, 0.0f, 4.0f);
+	_zoom.set("zoom", 0.5, 0.0f, 2.0f);
+
+	_kP.set("kP", 5.0f, 0.0f, 10.0f);
+	_vMax.set("vMax", 15.0f, 0.0f, 30.0f);
+	_aMax.set("aMax", 40.0f, 0.0f, 200.0f);
+	_approach.set("approach", 1.0f, 0.0f, 5.0f);
+	_approachWide.set("approachWide", 0.5f, 0.0f, 5.0f);
+
+	params_Settings.setName("config");
+	params_Settings.add(_edgeSlope);
+	params_Settings.add(_positionRoughness);
+	params_Settings.add(_centerArea);
+	params_Settings.add(_rotationArea);
+	params_Settings.add(_rotation);
+	params_Settings.add(_zoomArea);
+	params_Settings.add(_zoom);
+	params_Settings.add(_kP);
+	params_Settings.add(_vMax);
+	params_Settings.add(_aMax);
+	params_Settings.add(_approach);
+	loadGroup(params_Settings, pathSettings);
+
+	ofxLoadCamera(_camera, "ofEasyCamSettings");
 }
 
-//--------------------------------------------------------------
+//-----------------------_approachWide;//---------------------------------------
 void ofApp::update() {
 	double d = std::min(ofGetLastFrameTime(), 1.0 / 30.0);
-
 	auto impluse = [](double x, double a) {
 		double over_a = 1.0 / a;
 		return over_a * x * glm::exp(1.0 - over_a * x);
@@ -47,13 +94,13 @@ void ofApp::update() {
 	int N = 10;
 	double delta = d / N;
 	for (int i = 0; i < N; ++i) {
-		// 差
+		// Poor
 		double d = _to_x - _x;
 
-		// 比例制御(P)
+		// Proportional control (P)
 		auto pv = d * _kP;
 
-		// 距離の近いときの+速度
+		// + speed when the distance is short
 		auto nv = impluse(glm::abs(d), 0.5) * _approach;
 		if (pv < 0.0) {
 			nv = -nv;
@@ -61,11 +108,11 @@ void ofApp::update() {
 
 		auto v = pv + nv;
 
-		// 速度制限
+		// Speed ​​limit
 		v = std::min(v, (double)_vMax);
 		v = std::max(v, (double)-_vMax);
 
-		// 加速だけ制限をかけたい
+		// want to limit acceleration only
 		if (glm::abs(_v) < glm::abs(v)) {
 			auto amax = _aMax * delta;
 			double a = v - _v;
@@ -73,49 +120,113 @@ void ofApp::update() {
 			a = std::max(a, -amax);
 			v = _v + a;
 		}
-		
+
 		_v = v;
 		_x += _v * delta;
 	}
 
 }
+//--------------------------------------------------------------
+bool ofApp::drawGui() {
+	auto mainSettings = ofxImGui::Settings();
+
+	_imgui.begin();
+
+	if (ofxImGui::BeginWindow("CoverFlow", mainSettings, false))
+	{
+		//ImGui::PushStyleColor(ImGuiCol_WindowBg, ofVec4f(0.0f, 0.2f, 0.2f, 0.8f));
+		//ImGui::SetNextWindowPos(ofVec2f(10, 30), ImGuiCond_Once);
+		//ImGui::SetNextWindowSize(ofVec2f(500, ofGetHeight() * 0.8), ImGuiCond_Once);
+
+		//ImGui::Begin("Config");
+
+		ofxImGui::AddGroup(params_Control, mainSettings);
+
+		imgui_draw_tree_node("Cover Flow", true, [=]() {
+			AddParameter(_edgeSlope);
+			AddParameter(_positionRoughness);
+			AddParameter(_centerArea);
+			AddParameter(_rotationArea);
+			AddParameter(_rotation);
+			AddParameter(_zoomArea);
+			AddParameter(_zoom);
+		});
+
+		imgui_draw_tree_node("Movement", true, [=]() {
+			AddParameter(_kP);
+			AddParameter(_vMax);
+			AddParameter(_aMax);
+			AddParameter(_approach);
+			AddParameter(_approachWide);
+		});
+
+
+		//ImGui::End();
+		//ImGui::PopStyleColor();
+	}
+	ofxImGui::EndWindow(mainSettings);
+
+	_imgui.end();
+
+	return mainSettings.mouseOverGui;
+}
 
 //--------------------------------------------------------------
-void ofApp::draw(){
-	ofClear(0);
+void ofApp::draw() {
+	if (bDEBUG)
+		ofBackgroundGradient(ofColor(40, 40, 40), ofColor(0, 0, 0), OF_GRADIENT_CIRCULAR);
+	else
+	{
+		ofBackground(40);
+	}
 
-	ofSetColor(255);
 	_camera.begin();
-	
-	glPushMatrix();
-	ofRotateZ(90);
-	ofDrawGridPlane(1, 10);
 
+	if (bDEBUG)
+	{
+		// + draw a grid on the floor
+		ofPushStyle();
+		ofSetLineWidth(1.0f);
+		ofSetColor(ofColor(60));
+		ofPushMatrix();
+		ofRotate(90, 0, 0, -1);
+		ofDrawGridPlane(10, 10, false);
+		ofPopMatrix();
+		ofPopStyle();
+	}
 
-	ofPopMatrix();
+	if (bDEBUG)
+	{
+		ofPushStyle();
+		ofSetLineWidth(4.0f);
+		ofDrawAxis(10);
+		ofPopStyle();
+	}
 
-	ofDrawAxis(10);
+	//-
 
 	ofEnableDepthTest();
-	
-	// 位置場
+
+	//-
+
+	// Location field
 	// Integrate[t + w*exp(-(x^2)/s^2), {x, 0, z}]
 	auto position_field = [](double z, double s, double t, double w) {
 		return 0.5 * glm::sqrt(glm::pi<double>()) * s * w * std::erf(z / s) + t * z;
 	};
 
-	// 回転場
+	// rotating field
 	auto rotation_field = [](double z, double s) {
 		auto v = glm::exp(-(z * z) / (s * s)) - 1.0;
 		return 0.0 < z ? v : -v;
 	};
 
-	// ズーム場
+	// Zoom field
 	auto zoom_field = [](double z, double s) {
 		return glm::exp(-(z * z) / (s * s));
 	};
 
-	// 奥に並ぶようなやつ
+	// Those who line up in the back
 	// Integrate[erf(u*sqrt(pi) x), {x, 0, z}]
 	//auto zf = [](double z, double u) {
 	//	double sqPI = glm::sqrt(glm::pi<double>());
@@ -139,122 +250,94 @@ void ofApp::draw(){
 		ofTranslate(position, 0, zoomValue * _zoom);
 		ofRotateY(rot * _rotation);
 
-		// 縦
-//        ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
+		//-
 
-        ofSetColor(colors[i]);
+		//container or clickable object
+		if (bDEBUG)
+			ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
 
+		//-
 
-        if (_to_x == i)
-        {
-            ofPushMatrix();
-            float scale = 1.25f;
-            ofScale(scale,scale);
+		//objects
+		ofSetColor(colors[i]);
 
-            float dur = 25 * 20.f;
-            ofRotateYDeg(((ofGetFrameNum() % (int)dur)/dur) * 360.0f);
-        }
+		//highlight rotate selected
+		if (_to_x == i && bRotate)
+		{
+			//ofPushMatrix();
 
-        if (i%2==0)
-        {
+			//float scale = 1.25f;
+			//ofScale(scale, scale);
 
-//            ofDrawCircle(-0.5, -0.5, .5f);
+			float dur = 25 * 20.f;
+			float _deg = ((ofGetFrameNum() % (int)dur) / dur) * 360.0f;
+			ofRotateYDeg(-_deg);
+		}
 
-            ofFill();
-            ofDrawBox(.5);
-            ofSetColor(255);
-            ofNoFill();
-            ofDrawBox(.5);
+		//alternate prim type
+		if (i % 2 == 0)
+		{
+			ofFill();
+			ofDrawBox(.5);
+			ofSetColor(255);
+			ofNoFill();
+			ofDrawBox(.5);
+			//ofDrawCircle(-0.5, -0.5, .5f);
+		}
+		else
+		{
+			ofFill();
+			ofDrawCone(.25, .5);
+			ofSetColor(255);
+			ofNoFill();
+			ofDrawCone(.25, .5);
+			//ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
+		}
 
-        }
-        else
-        {
-//            ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
-
-            ofFill();
-            ofDrawCone(.25, .5);
-            ofSetColor(255);
-            ofNoFill();
-            ofDrawCone(.25, .5);
-        }
-
-        if (_to_x == i)
-        {
-            ofPopMatrix();
-        }
+		//if (_to_x == i)
+		//{
+		//	ofPopMatrix();
+		//}
 
 		ofPopMatrix();
 	}
 
-	// テスト描画
-	//ofSetColor(ofColor::red);
-	//ofDrawSphere(_x, 1.0f, 0.5f);
-	//ofSetColor(ofColor::green);
-	//ofDrawSphere(_to_x, 1.0f, 0.4f);
+	//// test drawing
+	//if (bDEBUG)
+	//{
+	//	ofSetColor(ofColor::red);
+	//	ofDrawSphere(_x, 1.0f, 0.5f);
+	//	ofSetColor(ofColor::green);
+	//	ofDrawSphere(_to_x, 1.0f, 0.4f);
+	//}
 
 	_camera.end();
 
-	_imgui.begin();
-	ImGui::PushStyleColor(ImGuiCol_WindowBg, ofVec4f(0.0f, 0.2f, 0.2f, 0.8f));
-    ImGui::SetNextWindowPos(ofVec2f(10, 30), ImGuiCond_Once);
-    ImGui::SetNextWindowSize(ofVec2f(500, ofGetHeight() * 0.8), ImGuiCond_Once);
+	//-
 
-	ImGui::Begin("Config");
+	// Gui
+	mouseOverGui = false;
+	if (guiVisible)
+	{
+		mouseOverGui = drawGui();
+	}
 
-	imgui_draw_tree_node("Cover Flow", true, [=]() {
-		// 両端の間隔
-		ImGui::SliderFloat("edgeSlope", &_edgeSlope, 0.0f, 1.0f);
-
-		// 真ん中エリアの幅
-		ImGui::SliderFloat("positionRoughness", &_positionRoughness, 0.0f, 4.0f);
-
-		// 真ん中エリアの幅拡張
-		ImGui::SliderFloat("centerArea", &_centerArea, 0.0f, 10.0f);
-
-		// 回転エリアの幅
-		ImGui::SliderFloat("rotationArea", &_rotationArea, 0.0f, 4.0f);
-
-		// 回転量
-		ImGui::SliderFloat("rotation", &_rotation, 0.0f, 90.0f);
-
-		// z方向ズーム幅
-		ImGui::SliderFloat("zoomArea", &_zoomArea, 0.0f, 4.0f);
-
-		// z方向ズーム量
-		ImGui::SliderFloat("zoom", &_zoom, 0.0f, 2.0f);
-	});
-
-
-	imgui_draw_tree_node("Movement", true, [=]() {
-		// 差に比例する量 = ベース速度を決める
-		ImGui::SliderFloat("kP", &_kP, 0.0f, 10.0f);
-
-		// 最大速度制限
-		ImGui::SliderFloat("vMax", &_vMax, 0.0f, 30.0f);
-
-		// 最大加速度制限（上り）
-		ImGui::SliderFloat("aMax", &_aMax, 0.0f, 200.0f);
-
-		// 距離が近いときの追加加速具合制御 - 通常の比例制御だと減速が激しいため
-		ImGui::SliderFloat("approach", &_approach, 0.0f, 5.0f);
-
-		// 距離が近いときの追加加速を行う幅。おおむね0.5でいい気がする
-		ImGui::SliderFloat("approachWide", &_approachWide, 0.0f, 5.0f);
-
-		ImGui::Separator();
-
-		// テスト用直接編集
-		ImGui::SliderInt("selection", &_to_x, 0, kSlideN - 1);
-	});
-
-	ImGui::End();
-	ImGui::PopStyleColor();
-
-	_imgui.end();
+	//cam
+	if (mouseOverGui)
+	{
+		_camera.disableMouseInput();
+	}
+	else
+	{
+		if (bCamEnable)
+			_camera.enableMouseInput();
+	}
+	//if (bDEBUG)
+	//	cout << "mouseOverGui: " << (mouseOverGui ? "IN" : "OUT") << endl;
 }
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key){
+void ofApp::keyPressed(int key) {
 	if (key == OF_KEY_RIGHT) {
 		_to_x += 1;
 	}
@@ -262,56 +345,143 @@ void ofApp::keyPressed(int key){
 		_to_x -= 1;
 	}
 
-	_to_x = std::min(_to_x, kSlideN - 1);
-	_to_x = std::max(_to_x, 0);
+	_to_x = std::min(_to_x.get(), kSlideN - 1);
+	_to_x = std::max(_to_x.get(), 0);
+
+
+	switch (key) {
+	case 'd':
+		bDEBUG = !bDEBUG;
+		break;
+	case 'g':
+		guiVisible = !guiVisible;
+		break;
+	case 's':
+		ofxSaveCamera(_camera, "ofEasyCamSettings");
+		break;
+	case 'r':
+		_camera.reset();
+		_camera.setLensOffset(ofVec2f());
+		_camera.setForceAspectRatio(false);
+		break;
+	case 'l':
+		ofxLoadCamera(_camera, "ofEasyCamSettings");
+		break;
+	}
 }
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
-
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
+void ofApp::keyReleased(int key) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
+void ofApp::mouseMoved(int x, int y) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
+void ofApp::mouseDragged(int x, int y, int button) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
+void ofApp::mousePressed(int x, int y, int button) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
+void ofApp::mouseReleased(int x, int y, int button) {
 
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseEntered(int x, int y) {
+
+}
+
+//--------------------------------------------------------------
+void ofApp::mouseExited(int x, int y) {
+
+}
+
+//--------------------------------------------------------------
+void ofApp::windowResized(int w, int h) {
+
+}
+
+//--------------------------------------------------------------
+void ofApp::gotMessage(ofMessage msg) {
+
+}
+
+//--------------------------------------------------------------
+void ofApp::dragEvent(ofDragInfo dragInfo) {
+
+}
+
+
+// my own helper
+//--------------------------------------------------------------
+template<typename ParameterType>
+bool ofApp::AddParameter(ofParameter<ParameterType>& parameter)
+{
+	auto tmpRef = parameter.get();
+	const auto& info = typeid(ParameterType);
+
+	//convert string to char pointer
+	string _str = parameter.getName();
+	const char * _name(_str.c_str());
+
+	if (info == typeid(float))
+	{
+		if (ImGui::SliderFloat(_name, (float *)&tmpRef, parameter.getMin(), parameter.getMax()))
+		{
+			parameter.set(tmpRef);
+			return true;
+		}
+		return false;
+	}
+	if (info == typeid(int))
+	{
+		if (ImGui::SliderInt(_name, (int *)&tmpRef, parameter.getMin(), parameter.getMax()))
+		{
+			parameter.set(tmpRef);
+			return true;
+		}
+		return false;
+	}
+	if (info == typeid(bool))
+	{
+		if (ImGui::Checkbox(_name, (bool *)&tmpRef))
+		{
+			parameter.set(tmpRef);
+			return true;
+		}
+		return false;
+	}
+
+	ofLogWarning(__FUNCTION__) << "Could not create GUI element for type " << info.name();
+	return false;
+}
+
+
+//--------------------------------------------------------------
+void ofApp::loadGroup(ofParameterGroup &g, string path)
+{
+	ofLogNotice("ofApp") << "loadGroup: " << g.getName() << " to " << path;
+	ofLogVerbose("ofApp") << "parameters: " << g.toString();
+	ofXml settings;
+	settings.load(path);
+	ofDeserialize(settings, g);
+}
+
+//--------------------------------------------------------------
+void ofApp::saveGroup(ofParameterGroup &g, string path)
+{
+	ofLogNotice("ofApp") << "saveGroup: " << g.getName() << " to " << path;
+	ofLogVerbose("ofApp") << "parameters: " << g.toString();
+	ofXml settings;
+	ofSerialize(settings, g);
+	settings.save(path);
 }

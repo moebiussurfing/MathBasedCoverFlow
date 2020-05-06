@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config>
+	<edgeSlope>0.689</edgeSlope>
+	<positionRoughness>2.947</positionRoughness>
+	<centerArea>1.1</centerArea>
+	<rotationArea>2.8</rotationArea>
+	<rotation>19.421</rotation>
+	<zoomArea>3.284</zoomArea>
+	<zoom>2</zoom>
+	<kP>5</kP>
+	<vMax>15</vMax>
+	<aMax>40</aMax>
+	<approach>1</approach>
+</config>

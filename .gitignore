@@ -57,3 +57,7 @@ openFrameworks-Info.plist
 Project.xcconfig
 config.make
 Makefile
+MathBasedCoverFlow.sln
+MathBasedCoverFlow.vcxproj
+MathBasedCoverFlow.vcxproj.filters
+bin/imgui.ini
