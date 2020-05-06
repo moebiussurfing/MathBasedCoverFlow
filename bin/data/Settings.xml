@@ -4,11 +4,11 @@
 	<positionRoughness>2.947</positionRoughness>
 	<centerArea>1.1</centerArea>
 	<rotationArea>2.8</rotationArea>
-	<rotation>19.421</rotation>
-	<zoomArea>3.284</zoomArea>
+	<rotation>0</rotation>
+	<zoomArea>0.821</zoomArea>
 	<zoom>2</zoom>
-	<kP>5</kP>
-	<vMax>15</vMax>
-	<aMax>40</aMax>
-	<approach>1</approach>
+	<kP>4.421</kP>
+	<vMax>28.579</vMax>
+	<aMax>140</aMax>
+	<approach>4.553</approach>
 </config>

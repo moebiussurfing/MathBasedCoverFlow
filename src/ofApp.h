@@ -74,6 +74,7 @@ public:
 	template<typename ParameterType>
 	bool AddParameter(ofParameter<ParameterType>& parameter);
 
+	//settings
 	void loadGroup(ofParameterGroup &g, string path);
 	void saveGroup(ofParameterGroup &g, string path);
 	string pathSettings = "Settings.xml";
