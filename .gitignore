@@ -61,3 +61,5 @@ MathBasedCoverFlow.sln
 MathBasedCoverFlow.vcxproj
 MathBasedCoverFlow.vcxproj.filters
 bin/imgui.ini
+.vs/MathBasedCoverFlow/v15/Solution.VC.db-shm
+.vs/MathBasedCoverFlow/v15/Solution.VC.db-wal

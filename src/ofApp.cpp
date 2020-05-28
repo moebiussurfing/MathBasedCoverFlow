@@ -150,7 +150,7 @@ bool ofApp::drawGui() {
 			AddParameter(_rotation);
 			AddParameter(_zoomArea);
 			AddParameter(_zoom);
-		});
+			});
 
 		imgui_draw_tree_node("Movement", true, [=]() {
 			AddParameter(_kP);
@@ -158,7 +158,7 @@ bool ofApp::drawGui() {
 			AddParameter(_aMax);
 			AddParameter(_approach);
 			AddParameter(_approachWide);
-		});
+			});
 
 
 		//ImGui::End();
@@ -253,8 +253,7 @@ void ofApp::draw() {
 		//-
 
 		//container or clickable object
-		if (bDEBUG)
-			ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
+		if (bDEBUG) ofDrawRectangle(-0.5, -0.5, 1.0f, 1.0f);
 
 		//-
 
@@ -262,6 +261,7 @@ void ofApp::draw() {
 		ofSetColor(colors[i]);
 
 		//highlight rotate selected
+		bRotate = true;
 		if (_to_x == i && bRotate)
 		{
 			//ofPushMatrix();
@@ -269,9 +269,12 @@ void ofApp::draw() {
 			//float scale = 1.25f;
 			//ofScale(scale, scale);
 
-			float dur = 25 * 20.f;
-			float _deg = ((ofGetFrameNum() % (int)dur) / dur) * 360.0f;
-			ofRotateYDeg(-_deg);
+			//float dur = 25 * 20.f;
+			//float _deg = ((ofGetFrameNum() % (int)dur) / dur) * 360.0f;
+			//ofRotateYDeg(-_deg);
+
+			currRot++;
+			ofRotateY(rot * _rotation - currRot);
 		}
 
 		//alternate prim type
@@ -338,6 +341,8 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
+	const int _to_x_PRE = _to_x;
+
 	if (key == OF_KEY_RIGHT) {
 		_to_x += 1;
 	}
@@ -345,8 +350,13 @@ void ofApp::keyPressed(int key) {
 		_to_x -= 1;
 	}
 
+	//clamp
 	_to_x = std::min(_to_x.get(), kSlideN - 1);
 	_to_x = std::max(_to_x.get(), 0);
+
+	//rot
+	rotators[_to_x_PRE] = currRot;
+	currRot = rotators[_to_x];
 
 
 	switch (key) {

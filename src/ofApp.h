@@ -4,7 +4,8 @@
 #include "ofxImGui.h"
 #include "ofxCameraSaveLoad.h"
 
-static int kSlideN = 15;
+#define NUM_OBJECTS 15
+static int kSlideN = NUM_OBJECTS;
 
 class ofApp : public ofBaseApp {
 
@@ -79,4 +80,6 @@ public:
 	void saveGroup(ofParameterGroup &g, string path);
 	string pathSettings = "Settings.xml";
 
+	float rotators[NUM_OBJECTS]{ 0 };
+	float currRot = 0;
 };
